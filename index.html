@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>今天吃什麼？🍱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fffbe6;
+      color: #333;
+    }
+    h1 { text-align: center; margin-bottom: 30px; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    select, input[type=range], button {
+      padding: 8px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    button {
+      cursor: pointer;
+      background: #ffd447;
+      border: none;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #ffc107;
+    }
+
+    .wheel-container {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      position: relative;
+    }
+    .wheel {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      border: 10px solid #f7c948;
+      background: conic-gradient(#ff9a9e 0% 25%, #fad0c4 25% 50%, #a1c4fd 50% 75%, #c2e9fb 75% 100%);
+      transition: transform 5s ease-out;
+    }
+    .pointer {
+      position: absolute; top: -30px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 30px solid red;
+    }
+    #map {
+      width: 100%; height: 300px; margin-top: 20px;
+      border-radius: 12px;
+    }
+    #result, #details {
+      margin-top: 15px;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .wheel-container {
+        width: 200px;
+        height: 200px;
+      }
+      #map {
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>今天吃什麼？🍜</h1>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>餐點類別</label>
+      <select id="category">
+        <option value="早餐">早餐</option>
+        <option value="午餐">午餐</option>
+        <option value="晚餐">晚餐</option>
+        <option value="宵夜">宵夜</option>
+        <option value="咖啡廳">咖啡廳</option>
+        <option value="酒吧">酒吧</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>距離 (km)</label>
+      <input type="range" id="distance" min="1" max="5" step="1" value="1">
+      <span id="distanceValue">1</span>
+    </div>
+
+    <div class="control-group">
+      <label>最低星等</label>
+      <select id="ratingFilter">
+        <option value="0">不限</option>
+        <option value="3.5">3.5↑</option>
+        <option value="4.0"selected>4.0↑</option>
+        <option value="4.5">4.5↑</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button onclick="findPlaces()">搜尋附近餐廳</button>
+    </div>
+  </div>
+
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <div class="wheel" id="wheel"></div>
+  </div>
+  <div style="text-align: center;">
+    <button onclick="spin()">開始轉盤！</button>
+  </div>
+
+  <div id="result"></div>
+  <div id="details"></div>
+  <div id="map"></div>
+
+  <script>
+    const categoryInput = document.getElementById("category");
+    const distanceInput = document.getElementById("distance");
+    const distanceValue = document.getElementById("distanceValue");
+    const ratingFilter = document.getElementById("ratingFilter");
+    const resultDiv = document.getElementById("result");
+    const detailDiv = document.getElementById("details");
+    const wheel = document.getElementById("wheel");
+    
+
+    
+    
+    let map;
+    let service;
+    let currentLocation;
+    let currentPlaces = [];
+    let placeMarkers = [];
+    let highlightMarker = null;
+    let totalRotate = 0;
+
+
+    distanceInput.addEventListener("input", () => {
+    distanceValue.textContent = distanceInput.value;
+    });
+
+    categoryInput.addEventListener("change", findPlaces);
+    ratingFilter.addEventListener("change", findPlaces);
+
+    function initMap() {
+      navigator.geolocation.getCurrentPosition(pos => {
+        currentLocation = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: currentLocation,
+          zoom: 15
+        });
+        new google.maps.Marker({ position: currentLocation, map, title: "你的位置" });
+      });
+    }
+
+    function clearMarkers() {
+      placeMarkers.forEach(marker => marker.setMap(null));
+      placeMarkers = [];
+      if (highlightMarker) highlightMarker.setMap(null);
+    }
+
+    function findPlaces() {
+      if (!currentLocation) return alert("無法獲取定位");
+      clearMarkers();
+
+      const keyword = categoryInput.value;
+      const radius = parseInt(distanceInput.value) * 1000;
+      const minRating = parseFloat(ratingFilter.value);
+
+      const request = {
+        location: currentLocation,
+        radius: radius,
+        keyword: keyword,
+        openNow: true
+      };
+
+      service = new google.maps.places.PlacesService(map);
+      service.nearbySearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          currentPlaces = results
+            .filter(p => !minRating || (p.rating && p.rating >= minRating))
+            .map(p => ({
+              name: p.name,
+              rating: p.rating || "無星等",
+              address: p.vicinity || "地址不詳",
+              location: p.geometry.location
+            }));
+
+          if (currentPlaces.length === 0) return alert("沒有符合條件的店家");
+          showMarkers(currentPlaces);
+          updateWheel();
+        } else {
+          alert("搜尋失敗！");
+        }
+      });
+    }
+
+    function showMarkers(places) {
+      map.setCenter(currentLocation);
+      places.forEach(place => {
+        const marker = new google.maps.Marker({
+          position: place.location,
+          map,
+          title: place.name
+        });
+        placeMarkers.push(marker);
+      });
+    }
+
+    function updateWheel() {
+      const colors = ['#fbc2eb', '#a6c1ee', '#fdcbf1', '#f3e5f5'];
+      const num = currentPlaces.length;
+      const slice = 100 / num;
+      const gradientParts = currentPlaces.map((_, i) =>
+        `${colors[i % colors.length]} ${i * slice}% ${(i + 1) * slice}%`
+      );
+      wheel.style.background = `conic-gradient(${gradientParts.join(",")})`;
+    }
+
+    function spin() {
+      if (currentPlaces.length === 0) return alert("請先搜尋餐廳");
+      const anglePer = 360 / currentPlaces.length;
+      const index = Math.floor(Math.random() * currentPlaces.length);
+      const rotateDeg = 360 * 10 + (360 - index * anglePer - anglePer / 2); // 每次多轉10圈
+      totalRotate += rotateDeg;
+      wheel.style.transform = `rotate(${totalRotate}deg)`;
+
+
+      setTimeout(() => {
+        const selected = currentPlaces[index];
+        resultDiv.textContent = `🎯 選擇：${selected.name}`;
+        detailDiv.innerHTML = `
+          <p>⭐ 星等：${selected.rating}</p>
+          <p>📍 地址：${selected.address}</p>
+        `;
+
+        if (highlightMarker) highlightMarker.setMap(null);
+        highlightMarker = new google.maps.Marker({
+          position: selected.location,
+          map,
+          title: selected.name,
+          icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+          }
+        });
+        map.panTo(selected.location);
+      }, 5200);
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGA4A_DiEKvSqYVDceTyhSxBAewqbzv2I&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
