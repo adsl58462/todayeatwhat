@@ -248,6 +248,11 @@
       const rotateDeg = 360 * 10 + (360 - index * anglePer - anglePer / 2); // 每次多轉10圈
       totalRotate += rotateDeg;
       wheel.style.transform = `rotate(${totalRotate}deg)`;
+    
+    function openGoogleMapsReview(placeId) {
+      const url = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+      window.open(url, "_blank"); // 新分頁開啟
+    }
 
 
       setTimeout(() => {
@@ -256,6 +261,7 @@
         detailDiv.innerHTML = `
           <p>⭐ 星等：${selected.rating}</p>
           <p>📍 地址：${selected.address}</p>
+          <button onclick="openGoogleMapsReview('${restaurant.place_id}')">查看評論</button>
         `;
 
         if (highlightMarker) highlightMarker.setMap(null);
