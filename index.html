@@ -125,7 +125,6 @@
   </div>
 
   <div class="wheel-container">
-    <div class="pointer"></div>
     <div class="wheel" id="wheel"></div>
   </div>
   <div style="text-align: center;">
@@ -163,7 +162,7 @@
 
     categoryInput.addEventListener("change", findPlaces);
     ratingFilter.addEventListener("change", findPlaces);
-
+    distanceInput.addEventListener("change", findPlaces);
     function initMap() {
       navigator.geolocation.getCurrentPosition(pos => {
         currentLocation = {
