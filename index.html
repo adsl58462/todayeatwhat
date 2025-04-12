@@ -250,10 +250,7 @@
       totalRotate += rotateDeg;
       wheel.style.transform = `rotate(${totalRotate}deg)`;
 
-    function openGoogleMapsReview(placeId) {
-      const url = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
-      window.open(url, "_blank");
-      }
+    
 
  
 
@@ -278,6 +275,10 @@
         map.panTo(selected.location);
       }, 5200);
     }
+    function openGoogleMapsReview(placeId) {
+      const url = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+      window.open(url, "_blank");
+      }
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGA4A_DiEKvSqYVDceTyhSxBAewqbzv2I&libraries=places&callback=initMap" async defer></script>
 </body>
