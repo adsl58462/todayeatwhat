@@ -261,7 +261,7 @@
         detailDiv.innerHTML = `
           <p>⭐ 星等：${selected.rating}</p>
           <p>📍 地址：${selected.address}</p>
-          <button onclick="openGoogleMapsReview('${restaurant.place_id}')">查看評論</button>
+          <button onclick="openGoogleMapsReview('${selected.restaurant.place_id}')">查看評論</button>
         `;
 
         if (highlightMarker) highlightMarker.setMap(null);
