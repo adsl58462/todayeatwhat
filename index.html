@@ -2,16 +2,17 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>今天吃什麼轉盤</title>
+  <title>今天吃什麼？🍱</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGA4A_DiEKvSqYVDceTyhSxBAewqbzv2I&libraries=places&callback=initMap" async defer></script>
 </head>
 <body>
-  <h1>🍽️ 今天吃什麼？</h1>
+  <h1>今天吃什麼？🍜</h1>
 
   <div class="controls">
-    <label>餐點類別：
+    <div class="control-group">
+      <label>餐點類別</label>
       <select id="category">
         <option value="早餐">早餐</option>
         <option value="午餐">午餐</option>
@@ -21,28 +22,40 @@
         <option value="酒吧">酒吧</option>
         <option value="飲料">飲料</option>
       </select>
-    </label>
+    </div>
 
-    <label>距離：<span id="distanceValue">1</span> 公里
-      <input type="range" id="distance" min="1" max="10" value="1">
-    </label>
+    <div class="control-group">
+      <label>距離 (km)</label>
+      <input type="range" id="distance" min="1" max="5" step="1" value="1">
+      <span id="distanceValue">1</span>
+    </div>
 
-    <label>星等：
+    <div class="control-group">
+      <label>最低星等</label>
       <select id="ratingFilter">
         <option value="0">不限</option>
         <option value="3.5">3.5↑</option>
         <option value="4.0" selected>4.0↑</option>
         <option value="4.5">4.5↑</option>
       </select>
-    </label>
+    </div>
+
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button onclick="findPlaces()">搜尋附近餐廳</button>
+    </div>
   </div>
 
-  <div id="wheel" class="wheel"></div>
-  <button onclick="spin()">🎰 開始轉盤</button>
+  <div class="wheel-container">
+    <div class="wheel" id="wheel"></div>
+  </div>
+  <div style="text-align: center;">
+    <button onclick="spin()">開始轉盤！</button>
+  </div>
 
-  <div id="result" class="result"></div>
-  <div id="details" class="details"></div>
-  <div id="map" class="map"></div>
+  <div id="result"></div>
+  <div id="details"></div>
+  <div id="map"></div>
 
   <script src="main.js"></script>
 </body>
