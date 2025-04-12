@@ -250,7 +250,7 @@
       wheel.style.transform = `rotate(${totalRotate}deg)`;
     
     function openGoogleMapsReview(placeId) {
-      const url = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+      const url = `https://www.google.com/maps/place/?q=place_id:${selected.restaurant.placeId}`;
       window.open(url, "_blank"); // 新分頁開啟
     }
 
