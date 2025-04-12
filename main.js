@@ -19,12 +19,12 @@ distanceInput.addEventListener("input", () => {
   distanceValue.textContent = distanceInput.value;
 });
 
-// 篩選條件改變就自動搜尋
+// 自動搜尋（範圍/類別/星等）變動時
 categoryInput.addEventListener("change", findPlaces);
 ratingFilter.addEventListener("change", findPlaces);
 distanceInput.addEventListener("change", findPlaces);
 
-// 初始化地圖
+// 初始化 Google 地圖
 function initMap() {
   navigator.geolocation.getCurrentPosition(pos => {
     currentLocation = {
@@ -39,7 +39,7 @@ function initMap() {
   });
 }
 
-// 清除舊標記
+// 清除舊的地圖標記
 function clearMarkers() {
   placeMarkers.forEach(marker => marker.setMap(null));
   placeMarkers = [];
@@ -72,8 +72,7 @@ function findPlaces() {
           rating: p.rating || "無星等",
           address: p.vicinity || "地址不詳",
           location: p.geometry.location,
-          place_id: p.place_id,
-          phone: p.formatted_phone_number || null
+          place_id: p.place_id
         }));
 
       if (currentPlaces.length === 0) return alert("沒有符合條件的店家");
@@ -85,7 +84,7 @@ function findPlaces() {
   });
 }
 
-// 顯示標記在地圖上
+// 在地圖上標記店家
 function showMarkers(places) {
   map.setCenter(currentLocation);
   places.forEach(place => {
@@ -109,12 +108,12 @@ function updateWheel() {
   wheel.style.background = `conic-gradient(${gradientParts.join(",")})`;
 }
 
-// 開始轉盤
+// 轉盤功能
 function spin() {
   if (currentPlaces.length === 0) return alert("請先搜尋餐廳");
   const anglePer = 360 / currentPlaces.length;
   const index = Math.floor(Math.random() * currentPlaces.length);
-  const rotateDeg = 360 * 10 + (360 - index * anglePer - anglePer / 2); // 每次多轉10圈
+  const rotateDeg = 360 * 10 + (360 - index * anglePer - anglePer / 2);
   totalRotate += rotateDeg;
   wheel.style.transform = `rotate(${totalRotate}deg)`;
 
@@ -142,13 +141,13 @@ function spin() {
   }, 5200);
 }
 
-// 開啟 Google Maps 評論
+// 查看 Google 評論
 function openGoogleMapsReview(placeId) {
   const url = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
   window.open(url, "_blank");
 }
 
-// 開啟 Google 導航
+// Google Maps 導航
 function navigateTo(address) {
   const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
   window.open(url, "_blank");
